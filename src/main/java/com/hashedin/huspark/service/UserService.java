@@ -26,6 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -159,6 +160,25 @@ public class UserService implements UserDetailsService {
             userPage.isFirst(),
             userPage.isLast()
         );
+    }
+
+    public UserResponse updateUserRole(Long userId, Role newRole) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+        
+        Role oldRole = user.getRole();
+        user.setRole(newRole);
+        User updatedUser = userRepository.save(user);
+        
+        logger.info("User role updated: ID {} from {} to {}", 
+                   userId, oldRole, newRole);
+        
+        // Log the role change
+        auditService.logAction("USER_ROLE_UPDATED", "USER", userId, 
+                             "User role changed from " + oldRole + " to " + newRole, 
+                             Map.of("oldRole", oldRole, "newRole", newRole));
+        
+        return convertToUserResponse(updatedUser);
     }
 
     private UserResponse convertToUserResponse(User user) {

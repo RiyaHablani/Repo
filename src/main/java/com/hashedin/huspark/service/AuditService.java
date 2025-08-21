@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hashedin.huspark.entity.AuditLog;
 import com.hashedin.huspark.entity.User;
 import com.hashedin.huspark.repository.AuditLogRepository;
+import com.hashedin.huspark.repository.UserRepository;
 import com.hashedin.huspark.util.EncryptionUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 public class AuditService {
 
     private final AuditLogRepository auditLogRepository;
+    private final UserRepository userRepository;
     private final EncryptionUtil encryptionUtil;
     private final ObjectMapper objectMapper;
 
@@ -165,7 +167,15 @@ public class AuditService {
 
     private User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return (User) authentication.getPrincipal();
+        if (authentication != null && authentication.getPrincipal() instanceof User) {
+            return (User) authentication.getPrincipal();
+        } else if (authentication != null && authentication.getPrincipal() instanceof String) {
+            // If principal is a string (username), fetch the user from repository
+            String username = (String) authentication.getPrincipal();
+            return userRepository.findByEmail(username)
+                    .orElseThrow(() -> new RuntimeException("User not found: " + username));
+        }
+        throw new RuntimeException("Unable to get current user from security context");
     }
 
     private boolean containsSensitiveData(Object details) {

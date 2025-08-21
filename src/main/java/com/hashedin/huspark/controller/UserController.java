@@ -95,4 +95,13 @@ public class UserController {
         PaginatedResponse<UserResponse> users = userService.getUsersWithFilters(name, email, role, page, size, sortBy, sortDirection);
         return ResponseEntity.ok(users);
     }
+
+    @PutMapping("/admin/{userId}/role")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserResponse> updateUserRole(
+            @PathVariable Long userId,
+            @RequestParam Role role) {
+        UserResponse updatedUser = userService.updateUserRole(userId, role);
+        return ResponseEntity.ok(updatedUser);
+    }
 }
