@@ -1,0 +1,4 @@
+com/hashedin/huspark/repository/UserRepositoryTest.class
+com/hashedin/huspark/controller/AuthControllerTest.class
+com/hashedin/huspark/HusparkApplicationTests.class
+com/hashedin/huspark/service/UserServiceTest.class
