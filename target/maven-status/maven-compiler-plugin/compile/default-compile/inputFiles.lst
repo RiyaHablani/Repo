@@ -1,12 +1,14 @@
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/HusparkApplication.java
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/config/DataLoader.java
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/config/JwtAuthenticationFilter.java
+/Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/config/MonitoringConfig.java
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/config/PasswordConfig.java
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/config/SecurityConfig.java
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/controller/AuditController.java
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/controller/AuthController.java
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/controller/BookController.java
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/controller/BorrowingController.java
+/Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/controller/ReportingController.java
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/controller/TestController.java
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/controller/UserController.java
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/dto/AuthResponse.java
@@ -14,8 +16,11 @@
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/dto/BookResponse.java
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/dto/BorrowRequest.java
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/dto/BorrowingTransactionResponse.java
+/Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/dto/MostBorrowedBookReport.java
+/Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/dto/OverdueItemReport.java
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/dto/PaginatedResponse.java
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/dto/SortRequest.java
+/Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/dto/SystemHealthReport.java
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/dto/UserLoginRequest.java
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/dto/UserRegistrationRequest.java
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/dto/UserResponse.java
@@ -50,7 +55,9 @@
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/service/BorrowingService.java
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/service/EmailService.java
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/service/NotificationService.java
+/Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/service/ReportingService.java
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/service/SmsService.java
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/service/UserService.java
+/Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/util/DataMaskingUtil.java
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/util/EncryptionUtil.java
 /Users/bhavesh/Desktop/Repo/src/main/java/com/hashedin/huspark/util/JwtUtil.java

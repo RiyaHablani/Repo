@@ -11,7 +11,10 @@ import com.hashedin.huspark.exception.UserAlreadyExistsException;
 import com.hashedin.huspark.exception.UserNotFoundException;
 import com.hashedin.huspark.repository.UserRepository;
 import com.hashedin.huspark.util.JwtUtil;
+import com.hashedin.huspark.util.DataMaskingUtil;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +32,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserService implements UserDetailsService {
 
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
@@ -36,13 +41,24 @@ public class UserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
+        logger.debug("Loading user by username: {}", DataMaskingUtil.maskEmail(username));
+        try {
+            UserDetails userDetails = userRepository.findByEmail(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
+            logger.debug("Successfully loaded user: {}", DataMaskingUtil.maskEmail(username));
+            return userDetails;
+        } catch (UsernameNotFoundException e) {
+            logger.warn("User not found: {}", DataMaskingUtil.maskEmail(username));
+            throw e;
+        }
     }
 
     public AuthResponse registerUser(UserRegistrationRequest request) {
+        logger.info("User registration request received for email: {}", DataMaskingUtil.maskEmail(request.getEmail()));
+        
         // Check if user already exists
         if (userRepository.existsByEmail(request.getEmail())) {
+            logger.warn("Registration failed - user already exists: {}", DataMaskingUtil.maskEmail(request.getEmail()));
             throw new UserAlreadyExistsException("User already exists with email: " + request.getEmail());
         }
 
@@ -54,6 +70,8 @@ public class UserService implements UserDetailsService {
         user.setRole(Role.MEMBER); // Default role
 
         User savedUser = userRepository.save(user);
+        logger.info("User registered successfully with ID: {}, email: {}", 
+                   savedUser.getId(), DataMaskingUtil.maskEmail(savedUser.getEmail()));
 
         // Log the user registration
         auditService.logUserRegistration(savedUser);
@@ -67,14 +85,20 @@ public class UserService implements UserDetailsService {
     }
 
     public AuthResponse loginUser(UserLoginRequest request) {
+        logger.info("User login attempt for email: {}", DataMaskingUtil.maskEmail(request.getEmail()));
+        
         // Find user by email
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new UserNotFoundException("User not found with email: " + request.getEmail()));
 
         // Check password
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            logger.warn("Login failed - invalid password for user: {}", DataMaskingUtil.maskEmail(request.getEmail()));
             throw new UserNotFoundException("Invalid email or password");
         }
+
+        logger.info("User login successful for ID: {}, email: {}", 
+                   user.getId(), DataMaskingUtil.maskEmail(user.getEmail()));
 
         // Generate JWT token
         String token = jwtUtil.generateToken(user.getEmail());

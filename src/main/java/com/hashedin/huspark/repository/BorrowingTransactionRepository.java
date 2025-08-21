@@ -59,4 +59,24 @@ public interface BorrowingTransactionRepository extends JpaRepository<BorrowingT
     @Query("SELECT bt FROM BorrowingTransaction bt WHERE DATE(bt.dueDate) = DATE(:dueDate) " +
            "AND bt.status = 'BORROWED'")
     List<BorrowingTransaction> findTransactionsDueOn(@Param("dueDate") LocalDateTime dueDate);
+
+    // Find most borrowed books
+    @Query("SELECT b.id, b.title, b.author, b.isbn, COUNT(bt.id) as borrowCount " +
+           "FROM BorrowingTransaction bt " +
+           "JOIN bt.book b " +
+           "GROUP BY b.id, b.title, b.author, b.isbn " +
+           "ORDER BY borrowCount DESC")
+    List<Object[]> findMostBorrowedBooks(@Param("limit") int limit);
+
+    // Find overdue transactions by status and due date
+    List<BorrowingTransaction> findByStatusAndDueDateBefore(TransactionStatus status, LocalDateTime dueDate);
+
+    // Count transactions by status
+    Long countByStatus(TransactionStatus status);
+
+    // Count transactions by status and due date before
+    Long countByStatusAndDueDateBefore(TransactionStatus status, LocalDateTime dueDate);
+
+    // Count transactions borrowed after a specific date
+    Long countByBorrowedAtAfter(LocalDateTime borrowedAt);
 }
