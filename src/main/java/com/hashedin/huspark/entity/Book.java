@@ -52,6 +52,12 @@ public class Book {
     @Column(name = "genre")
     private String genre;
 
+    @Column(name = "max_borrowing_days")
+    private Integer maxBorrowingDays = 14; // Default borrowing period
+
+    @Column(name = "is_borrowable")
+    private Boolean isBorrowable = true; // Default to borrowable
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

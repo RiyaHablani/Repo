@@ -30,6 +30,8 @@ public class BorrowingService {
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
     private final EncryptionUtil encryptionUtil;
+    private final AuditService auditService;
+    private final NotificationService notificationService;
 
     // Default borrowing period in days
     private static final int DEFAULT_BORROWING_DAYS = 14;
@@ -77,7 +79,7 @@ public class BorrowingService {
                 .orElseThrow(() -> new BookNotFoundException("Book not found with id: " + request.getBookId()));
 
         // Check if book is borrowable
-        if (!book.isBorrowable()) {
+        if (!book.getIsBorrowable()) {
             throw new BookNotBorrowableException("This book is not available for borrowing");
         }
 
@@ -123,6 +125,13 @@ public class BorrowingService {
         userRepository.save(currentUser);
 
         BorrowingTransaction savedTransaction = borrowingTransactionRepository.save(transaction);
+        
+        // Log the book borrowing
+        auditService.logBookBorrow(book.getId(), currentUser.getId(), savedTransaction.getId());
+        
+        // Send notification
+        notificationService.sendBookBorrowedNotification(savedTransaction);
+        
         log.info("Book '{}' borrowed by user '{}'", book.getTitle(), currentUser.getEmail());
         
         return convertToResponse(savedTransaction);
@@ -162,6 +171,13 @@ public class BorrowingService {
         bookRepository.save(book);
 
         BorrowingTransaction savedTransaction = borrowingTransactionRepository.save(transaction);
+        
+        // Log the book return
+        auditService.logBookReturn(book.getId(), currentUser.getId(), savedTransaction.getId());
+        
+        // Send notification
+        notificationService.sendBookReturnedNotification(savedTransaction);
+        
         log.info("Book '{}' returned by user '{}' with late fee: ${}", book.getTitle(), currentUser.getEmail(), lateFee);
         
         return convertToResponse(savedTransaction);
@@ -267,8 +283,8 @@ public class BorrowingService {
 
         // Return encrypted contact information
         String contactInfo = String.format("Phone: %s, Address: %s", 
-            user.getPhoneNumber() != null ? encryptionUtil.decrypt(user.getPhoneNumber()) : "N/A",
-            user.getAddress() != null ? encryptionUtil.decrypt(user.getAddress()) : "N/A");
+            user.getPhone() != null ? user.getPhone() : "N/A",
+            user.getAddress() != null ? user.getAddress() : "N/A");
         
         return contactInfo;
     }

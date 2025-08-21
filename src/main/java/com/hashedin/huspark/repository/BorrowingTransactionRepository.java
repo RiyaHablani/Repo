@@ -54,4 +54,9 @@ public interface BorrowingTransactionRepository extends JpaRepository<BorrowingT
     @Query("SELECT bt FROM BorrowingTransaction bt WHERE bt.returnedAt IS NOT NULL " +
            "AND bt.returnedAt > bt.dueDate AND bt.lateFee = 0")
     List<BorrowingTransaction> findTransactionsNeedingLateFeeCalculation();
+
+    // Find transactions due on a specific date
+    @Query("SELECT bt FROM BorrowingTransaction bt WHERE DATE(bt.dueDate) = DATE(:dueDate) " +
+           "AND bt.status = 'BORROWED'")
+    List<BorrowingTransaction> findTransactionsDueOn(@Param("dueDate") LocalDateTime dueDate);
 }

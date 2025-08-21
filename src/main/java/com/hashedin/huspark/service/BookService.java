@@ -2,6 +2,7 @@ package com.hashedin.huspark.service;
 
 import com.hashedin.huspark.dto.BookRequest;
 import com.hashedin.huspark.dto.BookResponse;
+import com.hashedin.huspark.dto.PaginatedResponse;
 import com.hashedin.huspark.entity.Book;
 import com.hashedin.huspark.entity.BookStatus;
 import com.hashedin.huspark.entity.Role;
@@ -15,7 +16,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,6 +29,7 @@ import java.util.stream.Collectors;
 public class BookService {
 
     private final BookRepository bookRepository;
+    private final AuditService auditService;
 
     // Helper method to get current user
     private User getCurrentUser() {
@@ -60,6 +67,14 @@ public class BookService {
         return books.stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
+    }
+
+    public PaginatedResponse<BookResponse> getAllBooksPaginated(int page, int size, String sortBy, String sortDirection) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection.toUpperCase()), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<Book> bookPage = bookRepository.findAll(pageable);
+        
+        return convertToPaginatedResponse(bookPage);
     }
 
     public BookResponse getBookById(Long id) {
@@ -117,6 +132,10 @@ public class BookService {
         book.setAvailabilityStatus(BookStatus.AVAILABLE);
 
         Book savedBook = bookRepository.save(book);
+        
+        // Log the book creation
+        auditService.logBookCreation(savedBook.getId(), savedBook.getTitle());
+        
         return convertToResponse(savedBook);
     }
 
@@ -150,7 +169,19 @@ public class BookService {
         book.setPublisher(bookRequest.getPublisher());
         book.setGenre(bookRequest.getGenre());
 
+        // Track changes for audit log
+        Map<String, Object> changes = Map.of(
+            "oldTitle", book.getTitle(),
+            "newTitle", bookRequest.getTitle(),
+            "oldAuthor", book.getAuthor(),
+            "newAuthor", bookRequest.getAuthor()
+        );
+
         Book updatedBook = bookRepository.save(book);
+        
+        // Log the book update
+        auditService.logBookUpdate(updatedBook.getId(), updatedBook.getTitle(), changes);
+        
         return convertToResponse(updatedBook);
     }
 
@@ -172,13 +203,60 @@ public class BookService {
             throw new UnauthorizedAccessException("Only librarians can delete books");
         }
 
-        if (!bookRepository.existsById(id)) {
-            throw new BookNotFoundException("Book not found with id: " + id);
-        }
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new BookNotFoundException("Book not found with id: " + id));
 
+        String bookTitle = book.getTitle();
         bookRepository.deleteById(id);
+        
+        // Log the book deletion
+        auditService.logBookDeletion(id, bookTitle);
     }
 
     // ADMIN has full access (inherits all LIBRARIAN permissions)
     // Additional admin-specific methods can be added here if needed
+
+    public PaginatedResponse<BookResponse> searchBooksPaginated(String searchTerm, int page, int size, String sortBy, String sortDirection) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection.toUpperCase()), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<Book> bookPage = bookRepository.searchBooksPaginated(searchTerm, pageable);
+        
+        return convertToPaginatedResponse(bookPage);
+    }
+
+    public PaginatedResponse<BookResponse> getBooksByStatusPaginated(BookStatus status, int page, int size, String sortBy, String sortDirection) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection.toUpperCase()), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<Book> bookPage = bookRepository.findByAvailabilityStatus(status, pageable);
+        
+        return convertToPaginatedResponse(bookPage);
+    }
+
+    public PaginatedResponse<BookResponse> getBooksWithFilters(String title, String author, String genre, 
+                                                             BookStatus status, String publisher, 
+                                                             int page, int size, String sortBy, String sortDirection) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection.toUpperCase()), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<Book> bookPage = bookRepository.findBooksWithFilters(title, author, genre, status, publisher, pageable);
+        
+        return convertToPaginatedResponse(bookPage);
+    }
+
+    private PaginatedResponse<BookResponse> convertToPaginatedResponse(Page<Book> bookPage) {
+        List<BookResponse> content = bookPage.getContent().stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+        
+        return new PaginatedResponse<>(
+            content,
+            bookPage.getNumber(),
+            bookPage.getSize(),
+            bookPage.getTotalElements(),
+            bookPage.getTotalPages(),
+            bookPage.hasNext(),
+            bookPage.hasPrevious(),
+            bookPage.isFirst(),
+            bookPage.isLast()
+        );
+    }
 }

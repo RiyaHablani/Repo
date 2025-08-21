@@ -1,0 +1,10 @@
+{
+  "title": "Test Book for Audit",
+  "author": "Test Author",
+  "isbn": "978-0-123456-78-9",
+  "barcode": "AUDIT001",
+  "description": "A test book for audit logging",
+  "publicationYear": 2024,
+  "publisher": "Test Publisher",
+  "genre": "Test"
+}

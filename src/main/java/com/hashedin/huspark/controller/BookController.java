@@ -2,6 +2,7 @@ package com.hashedin.huspark.controller;
 
 import com.hashedin.huspark.dto.BookRequest;
 import com.hashedin.huspark.dto.BookResponse;
+import com.hashedin.huspark.dto.PaginatedResponse;
 import com.hashedin.huspark.entity.BookStatus;
 import com.hashedin.huspark.service.BookService;
 import jakarta.validation.Valid;
@@ -23,8 +24,12 @@ public class BookController {
     // MEMBERS can search and view books
     @GetMapping
     @PreAuthorize("hasRole('MEMBER') or hasRole('LIBRARIAN') or hasRole('ADMIN')")
-    public ResponseEntity<List<BookResponse>> getAllBooks() {
-        List<BookResponse> books = bookService.getAllBooks();
+    public ResponseEntity<PaginatedResponse<BookResponse>> getAllBooks(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "title") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDirection) {
+        PaginatedResponse<BookResponse> books = bookService.getAllBooksPaginated(page, size, sortBy, sortDirection);
         return ResponseEntity.ok(books);
     }
 
@@ -44,15 +49,25 @@ public class BookController {
 
     @GetMapping("/search")
     @PreAuthorize("hasRole('MEMBER') or hasRole('LIBRARIAN') or hasRole('ADMIN')")
-    public ResponseEntity<List<BookResponse>> searchBooks(@RequestParam String q) {
-        List<BookResponse> books = bookService.searchBooks(q);
+    public ResponseEntity<PaginatedResponse<BookResponse>> searchBooks(
+            @RequestParam String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "title") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDirection) {
+        PaginatedResponse<BookResponse> books = bookService.searchBooksPaginated(q, page, size, sortBy, sortDirection);
         return ResponseEntity.ok(books);
     }
 
     @GetMapping("/status/{status}")
     @PreAuthorize("hasRole('MEMBER') or hasRole('LIBRARIAN') or hasRole('ADMIN')")
-    public ResponseEntity<List<BookResponse>> getBooksByStatus(@PathVariable BookStatus status) {
-        List<BookResponse> books = bookService.getBooksByStatus(status);
+    public ResponseEntity<PaginatedResponse<BookResponse>> getBooksByStatus(
+            @PathVariable BookStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "title") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDirection) {
+        PaginatedResponse<BookResponse> books = bookService.getBooksByStatusPaginated(status, page, size, sortBy, sortDirection);
         return ResponseEntity.ok(books);
     }
 
@@ -76,6 +91,23 @@ public class BookController {
     public ResponseEntity<BookResponse> updateBookStatus(@PathVariable Long id, @RequestParam BookStatus status) {
         BookResponse book = bookService.updateBookStatus(id, status);
         return ResponseEntity.ok(book);
+    }
+
+    @GetMapping("/filter")
+    @PreAuthorize("hasRole('MEMBER') or hasRole('LIBRARIAN') or hasRole('ADMIN')")
+    public ResponseEntity<PaginatedResponse<BookResponse>> filterBooks(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String author,
+            @RequestParam(required = false) String genre,
+            @RequestParam(required = false) BookStatus status,
+            @RequestParam(required = false) String publisher,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "title") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDirection) {
+        PaginatedResponse<BookResponse> books = bookService.getBooksWithFilters(
+            title, author, genre, status, publisher, page, size, sortBy, sortDirection);
+        return ResponseEntity.ok(books);
     }
 
     @DeleteMapping("/{id}")
