@@ -23,5 +23,20 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleValidationExceptions(MethodArgumentNotValidException ex) {
         return new ResponseEntity<>("Validation failed", HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(BookNotFoundException.class)
+    public ResponseEntity<String> handleBookNotFound(BookNotFoundException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(BookAlreadyExistsException.class)
+    public ResponseEntity<String> handleBookAlreadyExists(BookAlreadyExistsException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(UnauthorizedAccessException.class)
+    public ResponseEntity<String> handleUnauthorizedAccess(UnauthorizedAccessException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.FORBIDDEN);
+    }
 }
 
